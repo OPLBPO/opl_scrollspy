@@ -1,0 +1,118 @@
+<?php
+
+/**
+ * @file
+ * Scrollspy for SGP Books.
+ */
+
+/**
+ * Implements hook_block_info().
+ */
+function scrollspy_block_info() {
+  return array(
+    'scrollspynav' => array(
+      'info' => t('ScrollSpy navigation'),
+      'cache' => DRUPAL_CACHE_PER_PAGE,
+    ),
+  );
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function scrollspy_block_view($delta = '') {
+  $block = array();
+  switch ($delta) {
+    case 'scrollspynav':
+    //  $markup = _scrollspy_get_region_markup('secondary');
+    //  if (empty($markup)) {
+	// $markup = _scrollspy_get_region_markup('content');
+    $node = menu_get_object();
+        if (empty($node)) {
+          break;
+        }
+    //  }
+      $anchors = _scrollspy_extract_anchors($node);
+
+      if (empty($anchors) || !is_array($anchors)) {
+	break;
+      }
+
+
+      // Everything is ok -> generate block content:
+      $content = '';
+      $content .= '<div data-spy="affix" data-offset-top="300">';
+//      $content .= '<div class="hidden-md hidden-lg"><select id="scrollspy-select" onchange="location = this.options[this.selectedIndex].value;">';
+//      foreach ($anchors as $item) {
+//        $content .= '<option value="' . $item['href'] . '">' . $item['title'] . '</option>';
+//      }
+//      $content .= '</select></div>';
+
+      $content .= '<nav id="scrollspynav" class="hidden-xs" ><ul class="nav nav-stacked">';
+      $content .= '<li class="scrollspy-top"><a href="#jump-up">' . t('Top of page') . '</a></li>';
+      foreach ($anchors as $item) {
+        $content .= '<li class="' . $item['class'] . '"><a href="' . $item['href'] . '">' . $item['title'] . '</a></li>';
+      }
+      $content .= '<li class="scrollspy-bottom"><a href="#jump-down">' . t('Bottom of page') . '</a></li>';
+      $content .= '</ul></nav>';
+      $content .= '</div>';
+      $block['content'] = $content;
+      break;
+  }
+  return $block;
+}
+
+/**
+ * Implements template_preprocess_html().
+ */
+function scrollspy_preprocess_html(&$vars) {
+  $vars['attributes_array']['data-spy'] = 'scroll';
+  $vars['attributes_array']['data-target'] = '#scrollspynav';
+}
+
+/**
+ * Implements template_process_html().
+ */
+function scrollspy_process_html(&$vars) {
+  $vars['attributes'] = drupal_attributes($vars['attributes_array']);
+  $vars['page_top'] = '<a id="jump-up" class="element-invisible"></a>' . $vars['page_top'];
+  $vars['page_bottom'] .= '<a id="jump-down" class="element-invisible"></a>';
+}
+
+/**
+ * Helper function: returns the markup for a specified region.
+ */
+function _scrollspy_get_region_markup($region) {
+  $blocks = block_list($region);
+  $renderable = _block_get_renderable_array($blocks);
+  return drupal_render($renderable);
+}
+
+/**
+ * Helper function: returns the list of heading anchors in the markup.
+ */
+function _scrollspy_extract_anchors($node) {
+  global $language;
+  $lang = $language->language;
+
+  $body = $node->body[$lang][0]['safe_value'];
+
+  $doc = new DOMDocument();
+
+  $doc->loadHTML($body);
+
+  $anchors = array();
+
+  $list = $doc->getElementsByTagName("*");
+
+    for ($i = 0; $i < $list->length; $i++) {
+      if ($list->item($i)->nodeName == 'h2' || $list->item($i)->nodeName == 'h3' || $list->item($i)->nodeName == 'h4') {
+        //  $attrib = $list->item($i)->attributes;
+        $anchors[$i]['href'] = '#' . $list->item($i)->getAttribute("id");
+        $anchors[$i]['class'] = $list->item($i)->nodeName;
+        $anchors[$i]['class'] = 'scrollspy-' . $list->item($i)->nodeName;
+        $anchors[$i]['title'] = $list->item($i)->nodeValue;
+      }
+    }
+  return $anchors;
+}
