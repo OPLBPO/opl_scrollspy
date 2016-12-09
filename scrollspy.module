@@ -98,8 +98,9 @@ function _scrollspy_extract_anchors($node) {
   $body = $node->body[$lang][0]['safe_value'];
 
   $doc = new DOMDocument();
+  $doc->encoding = 'utf-8';
 
-  $doc->loadHTML($body);
+  $doc->loadHTML(utf8_decode($body));
 
   $anchors = array();
 
