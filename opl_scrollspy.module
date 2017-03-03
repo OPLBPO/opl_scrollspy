@@ -117,7 +117,8 @@ function _opl_scrollspy_extract_anchors($markup) {
     }
     elseif ($current_heading == ($previous_heading - 1)) {
       $previous_id = $new_anchors[($delta - 1)]['parent_id'];
-      $new_anchors[$delta]['parent_id'] = $new_anchors[($previous_id - 1)]['parent_id'];
+      $previous_parent = $new_anchors[($previous_id - 1)]['parent_id'];
+      $new_anchors[$delta]['parent_id'] = $previous_parent;
       $previous_heading = ($previous_heading - 1);
     }
   }
@@ -128,15 +129,15 @@ function _opl_scrollspy_extract_anchors($markup) {
 function _opl_scrollspy_build_tree($elements, $parent_id = 0) {
   $branch = array();
   foreach ($elements as $element) {
-      if ($element['parent_id'] == $parent_id) {
-          $children = _opl_scrollspy_build_tree($elements, $element['ID']);
-        if ($children) {
-          $element['children'] = $children;
-        }
-        $branch[] = $element;
+    if ($element['parent_id'] == $parent_id) {
+      $children = _opl_scrollspy_build_tree($elements, $element['ID']);
+      if ($children) {
+        $element['children'] = $children;
       }
-     // unset($element);
+      $branch[] = $element;
     }
+    // unset($element);
+  }
   return $branch;
 }
 
