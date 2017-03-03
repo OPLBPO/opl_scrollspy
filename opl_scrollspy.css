@@ -1,0 +1,33 @@
+#block-opl-scrollspy-opl-scrollspynav {
+    z-index: 40; }
+#block-opl-scrollspy-opl-scrollspynav .affix, #block-opl-scrollspy-opl-scrollspynav .affix-top {
+    background-color: rgba(240, 240, 240, 0.9); }
+#block-opl-scrollspy-opl-scrollspynav .affix .nav .nav, #block-opl-scrollspy-opl-scrollspynav .affix-top .nav .nav {
+    display: none; }
+#block-opl-scrollspy-opl-scrollspynav .affix .nav > .active > ul, #block-opl-scrollspy-opl-scrollspynav .affix-top .nav > .active > ul {
+    display: block; }
+#block-opl-scrollspy-opl-scrollspynav .affix li, #block-opl-scrollspy-opl-scrollspynav .affix-top li {
+    font-family: "Montserrat", Helvetica, Arial, sans-serif;
+    font-size: 0.85em;
+    margin: 0;
+    padding: 0;
+    line-height: 1.2em; }
+#block-opl-scrollspy-opl-scrollspynav .affix li a, #block-opl-scrollspy-opl-scrollspynav .affix-top li a {
+    padding: 5px 10px; }
+#block-opl-scrollspy-opl-scrollspynav .affix .nav > .active > a, #block-opl-scrollspy-opl-scrollspynav .affix-top .nav > .active > a {
+    background-color: white; }
+#block-opl-scrollspy-opl-scrollspynav .affix li.opl_scrollspy-h3, #block-opl-scrollspy-opl-scrollspynav .affix-top li.opl_scrollspy-h3 {
+    padding-left: 10px;
+    font-size: 0.9em; }
+#block-opl-scrollspy-opl-scrollspynav .affix li.opl_scrollspy-h4, #block-opl-scrollspy-opl-scrollspynav .affix-top li.opl_scrollspy-h4 {
+    padding-left: 15px;
+    font-size: 0.9em; }
+@media only screen and (min-width: 768px) {
+    #block-opl-scrollspy-opl-scrollspynav .affix {
+        width: 18%; } }
+@media only screen and (min-width: 992px) {
+    #block-opl-scrollspy-opl-scrollspynav .affix {
+        width: 20%; } }
+@media only screen and (min-width: 1200px) {
+    #block-opl-scrollspy-opl-scrollspynav .affix {
+        width: 23%; } }

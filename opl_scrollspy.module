@@ -1,0 +1,155 @@
+<?php
+
+/**
+ * @file
+ * opl_scrollspy for SGP Books.
+ */
+
+function opl_scrollspy_block_info() {
+  return array(
+      'opl_scrollspynav' => array(
+          'info' => t('opl_scrollspy navigation'),
+          'cache' => DRUPAL_CACHE_PER_PAGE,
+      ),
+  );
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function opl_scrollspy_block_view($delta = '') {
+  $block = array();
+  switch ($delta) {
+    case 'opl_scrollspynav':
+      $markup = _opl_scrollspy_get_region_markup('content');
+      $anchors = _opl_scrollspy_extract_anchors($markup);
+      if (empty($anchors) || !is_array($anchors)) {
+        break;
+      }
+
+      // Everything is ok -> generate block content:
+      $content = '';
+      $content .= '<div data-spy="affix" data-offset-top="300">';
+      $content .= '<nav id="opl_scrollspynav" class="hidden-xs" >';
+      $content .= _opl_scrollspy_get_tree($anchors);
+      $content .= '</nav></div>';
+      $block['content'] = $content;
+      break;
+  }
+  return $block;
+}
+
+/**
+ * Implements template_preprocess_html().
+ */
+function opl_scrollspy_preprocess_html(&$vars) {
+  $vars['attributes_array']['data-spy'] = 'scroll';
+  $vars['attributes_array']['data-target'] = '#opl_scrollspynav';
+}
+
+/**
+ * Implements template_process_html().
+ */
+function opl_scrollspy_process_html(&$vars) {
+  $vars['attributes'] = drupal_attributes($vars['attributes_array']);
+  $vars['page_top'] = '<a id="jump-up" class="element-invisible"></a>' . $vars['page_top'];
+  $vars['page_bottom'] .= '<a id="jump-down" class="element-invisible"></a>';
+}
+
+/**
+ * Helper function: returns the markup for a specified region.
+ */
+function _opl_scrollspy_get_region_markup($region) {
+  $blocks = block_list($region);
+  $renderable = _block_get_renderable_array($blocks);
+  return drupal_render($renderable);
+}
+
+/**
+ * Helper function: returns the list of heading anchors in the markup.
+ */
+function _opl_scrollspy_extract_anchors($markup) {
+  global $language;
+  $lang = $language->language;
+
+  $body = $markup;
+
+  $doc = new DOMDocument();
+  $doc->encoding = 'utf-8';
+  //Supress warnings about html 5 elements: see http://stackoverflow.com/questions/9149180/domdocumentloadhtml-error
+  libxml_use_internal_errors(true);
+  $doc->loadHTML(utf8_decode($body));
+  libxml_use_internal_errors(false);
+
+  $anchors = array();
+
+  $list = $doc->getElementsByTagName("*");
+
+  for ($i = 0; $i < $list->length; $i++) {
+    if ($list->item($i)->nodeName == 'h2' || $list->item($i)->nodeName == 'h3' || $list->item($i)->nodeName == 'h4') {
+      $anchors[$i]['href'] = '#' . $list->item($i)->getAttribute("id");
+      $anchors[$i]['heading_level'] = ((int)str_replace('h','',$list->item($i)->nodeName) - 2);
+      $anchors[$i]['class'] = 'opl_scrollspy-' . $list->item($i)->nodeName;
+      $anchors[$i]['title'] = $list->item($i)->nodeValue;
+    }
+  }
+
+  $new_anchors = array_values($anchors);
+
+  foreach ($new_anchors as $delta => $new_anchor) {
+    $new_anchors[$delta]['parent_id'] = 0;
+    $new_anchors[$delta]['ID'] = ($delta + 1);
+    $new_anchors[$delta]['parent_level'] = 0;
+    $current_heading = $new_anchor['heading_level'];
+    if ($current_heading == 0) {
+      $previous_heading = 0;
+      $previous_parent = 0;
+      $previous_parent_level = 0;
+    }
+    elseif ($current_heading == $previous_heading) {
+      $new_anchors[$delta]['parent_id'] = $previous_parent;
+    }
+    elseif ($current_heading == ($previous_heading + 1)) {
+      $previous_parent = $new_anchors[($delta - 1)]['ID'];
+      $new_anchors[$delta]['parent_id'] = $previous_parent;
+      $new_anchors[($delta - 1)]['parent_level'] = ($previous_parent_level + 1);
+      $previous_heading = ($previous_heading + 1);
+    }
+    elseif ($current_heading == ($previous_heading - 1)) {
+      $previous_id = $new_anchors[($delta - 1)]['parent_id'];
+      $new_anchors[$delta]['parent_id'] = $new_anchors[($previous_id - 1)]['parent_id'];
+      $previous_heading = ($previous_heading - 1);
+    }
+  }
+  $processed = _opl_scrollspy_build_tree($new_anchors);
+  return $processed;
+}
+
+function _opl_scrollspy_build_tree($elements, $parent_id = 0) {
+  $branch = array();
+  foreach ($elements as $element) {
+      if ($element['parent_id'] == $parent_id) {
+          $children = _opl_scrollspy_build_tree($elements, $element['ID']);
+        if ($children) {
+          $element['children'] = $children;
+        }
+        $branch[] = $element;
+      }
+     // unset($element);
+    }
+  return $branch;
+}
+
+function _opl_scrollspy_get_tree($array) {
+  $content = '<ul class="nav">';
+  foreach ($array as $key => $item) {
+    if (!empty($item['children']) && is_array($item['children'])) {
+      $content .= '<li class="' . $item['class'] . '"><a href="' . $item['href'] . '">' . $item['title'] . '</a>';
+      $content .= _opl_scrollspy_get_tree($item['children']);
+      continue;
+    }
+    $content .= '<li class="' . $item['class'] . '"><a href="' . $item['href'] . '">' . $item['title'] . '</a></li>';
+  }
+  $content .= '</ul>';
+  return $content;
+}
