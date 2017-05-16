@@ -3,4 +3,5 @@ description = Adds Bootstrap Scrollspy block functionality.
 package = User interface
 core = 7.x
 dependencies[] = block
+dependencies[] = headerid
 stylesheets[all][] = opl_scrollspy.css
